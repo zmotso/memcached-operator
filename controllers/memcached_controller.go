@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"go.opentelemetry.io/otel"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -42,6 +43,10 @@ type MemcachedReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
 func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := ctrllog.FromContext(ctx)
+
+	tracer := otel.GetTracerProvider().Tracer("operator/reconciliation")
+	ctx, span := tracer.Start(ctx, "reconcileMemcached")
+	defer span.End()
 
 	// Fetch the Memcached instance
 	memcached := &cachev1alpha1.Memcached{}
